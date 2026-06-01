@@ -21,6 +21,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = Number(process.env.PORT || 4000);
 const clientOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+const frontendDistPath = path.resolve(__dirname, "../../frontend/dist");
+const frontendIndexPath = path.join(frontendDistPath, "index.html");
 
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json());
@@ -38,6 +40,16 @@ app.use("/api/call-events", callEventRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
+
+app.use(express.static(frontendDistPath));
+
+app.get("*", (_req, res) => {
+  res.sendFile(frontendIndexPath, (error) => {
+    if (error) {
+      res.status(404).send("Frontend build not found. Run npm run build in the frontend folder.");
+    }
+  });
+});
 
 const io = new Server(server, {
   cors: {
